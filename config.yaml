@@ -1,0 +1,12 @@
+dataset:
+  data_dir: ./dataset/data
+  file_name: tamil_offensive_
+model:
+  model_loc: ./transformer/models
+  model: bert-base-multilingual-cased
+  ckpt: None
+hyperparameters:
+  lr: 2e-5
+  epochs: 10
+  batch_size: 64
+  
