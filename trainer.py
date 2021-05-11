@@ -71,7 +71,7 @@ train_dataloader, val_dataloader, class_wt = get_dataloader_task1(
     config["hyperparameters"]["batch_size"],
 )
 
-criterion = nn.CrossEntropyLoss(weight=class_wt)
+criterion = nn.CrossEntropyLoss(weight=class_wt.to(device))
 optimizer, scheduler = configure_optimizers(_model, train_dataloader)
 
 _model, optimizer, scheduler, best_weighted_f1, start_epoch = load_checkpoint(
