@@ -18,7 +18,7 @@ parser.add_argument(
     default="./data",
 )
 args = parser.parse_args()
-demoji.download_codes() 
+# demoji.download_codes()
 
 
 def preprocess_text(text):
@@ -55,15 +55,25 @@ def preprocess_text(text):
     return text
 
 
-def process_csv(_type):
+def process_csv(_type, _csv=True, names=None):
     path = os.path.join(args.data, args.file + _type + ".tsv")
-    df = pd.read_csv(path, sep="\t")
+    if _csv:
+        df = pd.read_csv(path, sep="\t", names=names)
+    else:
+        df = pd.read_excel(path.replace("tsv", "xlsx"), names=names)
+    df = df.dropna()
+
+    print(df.head())
 
     df["cleaned_text"] = df["text"].map(lambda x: preprocess_text(x))
+    # df["cleaned_text"] = df["Tweets"].map(lambda x: preprocess_text(x))
+    # df = df.rename(columns = {'Labels': 'category'}, inplace = False)
+    # df = df.rename(columns = {'ID': 'id'}, inplace = False)
 
     df.to_csv(path, sep="\t", index=False)
 
 
-process_csv("train")
-# process_csv("val")
+# process_csv("train")
+# process_csv("train", False, ["id", "text", "category"])
+# process_csv("dev", ["id", "text", "category"])
 # process_csv("test")
