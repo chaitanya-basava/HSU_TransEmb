@@ -9,10 +9,13 @@ class TransformerClassifier(nn.Module):
         self.bert = AutoModel.from_pretrained(model_name)
         self.lin0 = nn.Linear(self.bert.config.hidden_size, hidden_states)
         self.lin1 = nn.Linear(hidden_states, n_classes)
-        self.lReLU = nn.LeakyReLU(0.1)
+        self.reLU = nn.ReLU()
+        self.dropout = nn.Dropout(0.3)
 
     def forward(self, input_ids, attention_mask):
-        bert_output = self.bert(input_ids=input_ids, attention_mask=attention_mask)
-        y = self.lin0(bert_output["pooler_output"])
-        y = self.lReLU(y)
+        output = self.bert(input_ids=input_ids, attention_mask=attention_mask)
+        output = output.last_hidden_state[:, 0, :]
+        y = self.lin0(output)
+        y = self.reLU(y)
+        y = self.dropout(y)
         return self.lin1(y)

@@ -3,7 +3,7 @@ dataset:
   file_name: tamil_offensive_
 model:
   model_loc: /content/drive/MyDrive/HASOC/transformer
-  model: bert-base-multilingual-cased #google/muril-base-cased #monsoon-nlp/tamillion
+  model: bert-base-multilingual-cased #google/muril-base-cased #monsoon-nlp/tamillion #ai4bharat/indic-bert
   ckpt: 
 hyperparameters:
   lr: 2e-5

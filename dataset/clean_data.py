@@ -43,14 +43,14 @@ def preprocess_text(text):
     text = text.replace("@", "")
 
     # replace emoji's with text decription
-    emoji_dict = demoji.findall(text)
-    if len(emoji_dict): 
-        for emoji, emoji_text in emoji_dict.items():
-            text = text.replace(emoji, ' '+emoji_text+' ')
-            text = ' '.join(text.split())
+    # emoji_dict = demoji.findall(text)
+    # if len(emoji_dict): 
+    #     for emoji, emoji_text in emoji_dict.items():
+    #         text = text.replace(emoji, ' '+emoji_text+' ')
+    #         text = ' '.join(text.split())
 
     # remove emoji
-    # text = emoji.sub(r"", text)
+    text = emoji.sub(r"", text)
 
     return text
 

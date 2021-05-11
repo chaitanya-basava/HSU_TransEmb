@@ -2,6 +2,7 @@ import os
 import yaml
 import numpy as np
 from tqdm import tqdm
+from sklearn.metrics import f1_score
 
 import torch
 import torch.nn as nn
@@ -28,7 +29,7 @@ if not os.path.exists(model_dir):
     os.makedirs(model_dir)
 
 
-def step(model, batch):
+def step(model, batch, criterion):
     targets = batch["label"].to(device)
 
     outputs = model(
@@ -38,10 +39,14 @@ def step(model, batch):
 
     _, preds = torch.max(outputs, dim=1)
 
-    return {
-        "loss": nn.functional.cross_entropy(outputs, targets),
-        "accuracy": (preds == targets).float().mean(),
-    }
+    return (
+        {
+            "loss": criterion(outputs, targets),
+            "accuracy": (preds == targets).float().mean(),
+        },
+        preds,
+        targets,
+    )
 
 
 def configure_optimizers(model, dataloader):
@@ -59,17 +64,17 @@ def configure_optimizers(model, dataloader):
 
 
 _model = TransformerClassifier(config["model"]["model"]).to(device)
-
-train_dataloader, val_dataloader = get_dataloader_task1(
+train_dataloader, val_dataloader, class_wt = get_dataloader_task1(
     config["dataset"]["data_dir"],
     config["dataset"]["file_name"],
     config["model"]["model"],
     config["hyperparameters"]["batch_size"],
 )
 
+criterion = nn.CrossEntropyLoss(weight=class_wt)
 optimizer, scheduler = configure_optimizers(_model, train_dataloader)
 
-_model, optimizer, scheduler, best_val_acc, start_epoch = load_checkpoint(
+_model, optimizer, scheduler, best_weighted_f1, start_epoch = load_checkpoint(
     config["model"]["ckpt"],
     config["model"]["model"],
     model_dir,
@@ -92,7 +97,7 @@ for epoch in range(start_epoch, total_epochs):
     ) as tepoch:
         tepoch.set_postfix(loss=0.0, acc=0.0)
         for batch_idx, batch in enumerate(tepoch):
-            details = step(_model, batch)
+            details, _, _ = step(_model, batch, criterion)
 
             optimizer.zero_grad()
             details["loss"].backward()
@@ -108,13 +113,17 @@ for epoch in range(start_epoch, total_epochs):
 
     #### VAL STEP ####
     _model.eval()
+    y_preds, y_test = np.array([]), np.array([])
     with torch.set_grad_enabled(False):
         with tqdm(
             val_dataloader, desc="val-{}/{}".format(epoch, total_epochs - 1)
         ) as vepoch:
             vepoch.set_postfix(loss=0.0, acc=0.0)
             for batch_idx, batch in enumerate(vepoch):
-                details = step(_model, batch)
+                details, ypred, ytrue = step(_model, batch, criterion)
+
+                y_preds = np.hstack((y_preds, ypred.cpu().numpy()))
+                y_test = np.hstack((y_test, ytrue.to('cpu').numpy()))
 
                 val_loss.append(details["loss"].item())
                 val_acc.append(details["accuracy"].item())
@@ -122,27 +131,42 @@ for epoch in range(start_epoch, total_epochs):
                 vepoch.set_postfix(
                     loss=details["loss"].item(), acc=np.array(val_acc).mean()
                 )
+    
+    weighted_f1 = f1_score(y_test, y_preds, average='weighted')
 
-    avg_val_acc = np.array(val_acc).mean()
-    if best_val_acc <= avg_val_acc:
-        best_val_acc = avg_val_acc
+    # avg_val_acc = np.array(val_acc).mean()
+    # if best_val_acc <= avg_val_acc:
+    #     best_val_acc = avg_val_acc
+    #     torch.save(
+    #         {
+    #             config["model"]["model"]: _model.state_dict(),
+    #             "scheduler": scheduler.state_dict(),
+    #             "optimizer": optimizer.state_dict(),
+    #             "epoch": start_epoch + epoch,
+    #             "val_acc": best_val_acc,
+    #         },
+    #         os.path.join(model_dir, f"{epoch}_{int(avg_val_acc*100.)}.pkl"),
+    #     )
+
+    if best_weighted_f1 <= weighted_f1:
+        best_weighted_f1 = weighted_f1
         torch.save(
             {
                 config["model"]["model"]: _model.state_dict(),
                 "scheduler": scheduler.state_dict(),
                 "optimizer": optimizer.state_dict(),
                 "epoch": start_epoch + epoch,
-                "val_acc": best_val_acc,
+                "weighted_f1": weighted_f1,
             },
-            os.path.join(model_dir, f"{epoch}_{int(avg_val_acc*100.)}.pkl"),
+            os.path.join(model_dir, f"{epoch}_{int(weighted_f1*100.)}.pkl"),
         )
 
     print(
-        "Epoch {} - train loss: {}, train acc: {}".format(
+        "Epoch {} - train loss: {}, train acc: {}, val loss: {}, val acc: {}".format(
             epoch,
             np.array(train_loss).mean(),
             np.array(train_acc).mean() * 100.0,
             np.array(val_loss).mean(),
-            avg_val_acc * 100.0,
+            np.array(val_acc).mean() * 100.0,
         )
     )
