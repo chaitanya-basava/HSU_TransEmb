@@ -22,7 +22,7 @@ class Task1Dataset(Dataset):
         self.padding_type = padding_type
         self.path = os.path.join(path, file + _type + ".tsv")
 
-        df = pd.read_csv(self.path)
+        df = pd.read_csv(self.path, sep='\t')
         self.texts = df.cleaned_text.to_numpy()
         self.labels = np.array(df.category.to_numpy() == "OFF", dtype=np.int)
 

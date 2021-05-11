@@ -141,7 +141,7 @@ for epoch in range(start_epoch, total_epochs):
                 "epoch": start_epoch + epoch,
                 "val_acc": best_val_acc,
             },
-            os.path.join(model_dir, f"{epoch}_{int(avg_val_acc)}.pkl"),
+            os.path.join(model_dir, f"{epoch}_{int(avg_val_acc*100.)}.pkl"),
         )
 
     print(
