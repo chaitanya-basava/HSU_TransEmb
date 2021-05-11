@@ -14,15 +14,14 @@ def get_dataloader_task1(
     file_name,
     model,
     batch_size=64,
-    mode="train",
     max_length=512,
     padding_type="max_length",
 ):
     tokenizer = AutoTokenizer.from_pretrained(model)
 
-    path = os.path.join(data_path, file_name + mode + ".tsv")
+    path = os.path.join(data_path, file_name + "train.tsv")
+    
     df = pd.read_csv(path, sep="\t")
-
     texts = df.cleaned_text.to_numpy()
     labels = np.array(df.category.to_numpy() == "OFF", dtype=np.int)
 

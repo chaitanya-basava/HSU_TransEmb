@@ -7,10 +7,11 @@ from tqdm import tqdm
 
 import torch
 import torch.nn as nn
+from transformers import AutoTokenizer
 from transformers import get_linear_schedule_with_warmup, AdamW
 
 from transformer.model import TransformerClassifier
-from utils.dataloader import get_dataloader
+from utils.dataloader import get_dataloader_task1
 
 
 with open("./config.yaml") as file:
@@ -57,16 +58,14 @@ def configure_optimizers(model, dataloader):
     )
     return optim, scheduler
 
+_model = TransformerClassifier(config["model"]["model"]).to(device)
 
-train_dataloader, val_dataloader = get_dataloader(
+train_dataloader, val_dataloader = get_dataloader_task1(
     config["dataset"]["data_dir"],
     config["dataset"]["file_name"],
     config["model"]["model"],
     config["hyperparameters"]["batch_size"],
-    "train",
 )
-
-_model = TransformerClassifier().to(device)
 
 optimizer, scheduler = configure_optimizers(_model, train_dataloader)
 
@@ -107,7 +106,7 @@ for epoch in range(start_epoch, total_epochs):
             train_acc.append(details["accuracy"].item())
 
             tepoch.set_postfix(
-                loss=details["loss"].item(), acc=100.0 * np.array(train_acc).mean()
+                loss=details["loss"].item(), acc=np.array(train_acc).mean()
             )
 
     #### VAL STEP ####
@@ -124,7 +123,7 @@ for epoch in range(start_epoch, total_epochs):
                 val_acc.append(details["accuracy"].item())
 
                 vepoch.set_postfix(
-                    loss=details["loss"].item(), acc=100.0 * np.array(val_acc).mean()
+                    loss=details["loss"].item(), acc=np.array(val_acc).mean()
                 )
 
     avg_val_acc = np.array(val_acc).mean()
