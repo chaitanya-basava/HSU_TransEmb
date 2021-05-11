@@ -1,6 +1,4 @@
-import os
 import pandas as pd
-import numpy as np
 
 import torch
 from torch.utils.data import Dataset
@@ -9,9 +7,8 @@ from torch.utils.data import Dataset
 class Task1Dataset(Dataset):
     def __init__(
         self,
-        path,
-        file,
-        _type,
+        texts,
+        labels,
         tokenizer,
         max_len=512,
         padding_type="max_length",
@@ -20,11 +17,8 @@ class Task1Dataset(Dataset):
         self.max_len = max_len
         self.tokenizer = tokenizer
         self.padding_type = padding_type
-        self.path = os.path.join(path, file + _type + ".tsv")
-
-        df = pd.read_csv(self.path, sep='\t')
-        self.texts = df.cleaned_text.to_numpy()
-        self.labels = np.array(df.category.to_numpy() == "OFF", dtype=np.int)
+        self.texts = texts
+        self.labels = labels
 
     def __len__(self):
         return len(self.texts)

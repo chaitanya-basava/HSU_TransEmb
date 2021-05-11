@@ -24,6 +24,9 @@ model_dir = config["model"]["model_loc"]
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)
 
+model_dir = os.path.join(model_dir, config['model']['model'].split('/')[-1])
+if not os.path.exists(model_dir):
+    os.makedirs(model_dir)
 
 def step(model, batch):
     targets = batch["label"].to(device)
@@ -55,21 +58,13 @@ def configure_optimizers(model, dataloader):
     return optim, scheduler
 
 
-train_dataloader = get_dataloader(
+train_dataloader, val_dataloader = get_dataloader(
     config["dataset"]["data_dir"],
     config["dataset"]["file_name"],
     config["model"]["model"],
     config["hyperparameters"]["batch_size"],
     "train",
 )
-
-# val_dataloader = get_dataloader(
-#     args.data_dir,
-#     args.lang,
-#     args.batch_size,
-#     args.model_name,
-#     "val",
-# )
 
 _model = TransformerClassifier().to(device)
 
@@ -95,6 +90,7 @@ for epoch in range(start_epoch, total_epochs):
     val_loss, val_acc = [], []
 
     #### TRAIN STEP ####
+    _model.train()
     with tqdm(
         train_dataloader, desc="train-{}/{}".format(epoch, total_epochs - 1)
     ) as tepoch:
@@ -115,22 +111,23 @@ for epoch in range(start_epoch, total_epochs):
             )
 
     #### VAL STEP ####
-    # with torch.set_grad_enabled(False):
-    #     with tqdm(
-    #         val_dataloader, desc="val-{}/{}".format(epoch, total_epochs - 1)
-    #     ) as vepoch:
-    #         vepoch.set_postfix(loss=0.0, acc=0.0)
-    #         for batch_idx, batch in enumerate(vepoch):
-    #             details = step(_model, batch)
+    _model.eval()
+    with torch.set_grad_enabled(False):
+        with tqdm(
+            val_dataloader, desc="val-{}/{}".format(epoch, total_epochs - 1)
+        ) as vepoch:
+            vepoch.set_postfix(loss=0.0, acc=0.0)
+            for batch_idx, batch in enumerate(vepoch):
+                details = step(_model, batch)
 
-    #             val_loss.append(details["loss"].item())
-    #             val_acc.append(details["accuracy"].item())
+                val_loss.append(details["loss"].item())
+                val_acc.append(details["accuracy"].item())
 
-    #             vepoch.set_postfix(
-    #                 loss=details["loss"].item(), acc=100.0 * np.array(val_acc).mean()
-    #             )
+                vepoch.set_postfix(
+                    loss=details["loss"].item(), acc=100.0 * np.array(val_acc).mean()
+                )
 
-    avg_val_acc = np.array(train_acc).mean()
+    avg_val_acc = np.array(val_acc).mean()
     if best_val_acc <= avg_val_acc:
         best_val_acc = avg_val_acc
         torch.save(
@@ -149,7 +146,7 @@ for epoch in range(start_epoch, total_epochs):
             epoch,
             np.array(train_loss).mean(),
             np.array(train_acc).mean() * 100.0,
-            # np.array(val_loss).mean(),
-            # avg_val_acc * 100.0,
+            np.array(val_loss).mean(),
+            avg_val_acc * 100.0,
         )
     )
