@@ -26,7 +26,7 @@ def get_dataloader_task1(
     labels = np.array(df.category.to_numpy() == "OFF", dtype=np.int)
 
     X_train, X_val, y_train, y_val = train_test_split(
-        texts, labels, test_size=0.33, random_state=0
+        texts, labels, test_size=0.20, random_state=0
     )
 
     train_dataset = Task1Dataset(

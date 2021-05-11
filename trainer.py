@@ -1,17 +1,15 @@
 import os
-import sys
 import yaml
-import argparse
 import numpy as np
 from tqdm import tqdm
 
 import torch
 import torch.nn as nn
-from transformers import AutoTokenizer
 from transformers import get_linear_schedule_with_warmup, AdamW
 
 from transformer.model import TransformerClassifier
 from utils.dataloader import get_dataloader_task1
+from utils.load_checkpoint import load_checkpoint
 
 
 with open("./config.yaml") as file:
@@ -25,9 +23,10 @@ model_dir = config["model"]["model_loc"]
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)
 
-model_dir = os.path.join(model_dir, config['model']['model'].split('/')[-1])
+model_dir = os.path.join(model_dir, config["model"]["model"].split("/")[-1])
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)
+
 
 def step(model, batch):
     targets = batch["label"].to(device)
@@ -58,6 +57,7 @@ def configure_optimizers(model, dataloader):
     )
     return optim, scheduler
 
+
 _model = TransformerClassifier(config["model"]["model"]).to(device)
 
 train_dataloader, val_dataloader = get_dataloader_task1(
@@ -69,18 +69,15 @@ train_dataloader, val_dataloader = get_dataloader_task1(
 
 optimizer, scheduler = configure_optimizers(_model, train_dataloader)
 
-if config["model"]["ckpt"]:
-    checkpoint = torch.load(
-        os.path.join(model_dir, config["model"]["ckpt"]), map_location=device
-    )
-
-    _model.load_state_dict(checkpoint[config["model"]["model"]])
-    optimizer.load_state_dict(checkpoint["optimizer"])
-    scheduler.load_state_dict(checkpoint["scheduler"])
-    best_val_acc = checkpoint["val_acc"]
-    start_epoch = checkpoint["epoch"]
-else:
-    start_epoch, best_val_acc = 1, 0.0
+_model, optimizer, scheduler, best_val_acc, start_epoch = load_checkpoint(
+    config["model"]["ckpt"],
+    config["model"]["model"],
+    model_dir,
+    device,
+    _model,
+    optimizer,
+    scheduler,
+)
 
 total_epochs = config["hyperparameters"]["epochs"] + start_epoch
 
