@@ -1,6 +1,5 @@
 import os
 import re
-import demoji
 import argparse
 import pandas as pd
 
@@ -18,7 +17,6 @@ parser.add_argument(
     default="./data",
 )
 args = parser.parse_args()
-# demoji.download_codes()
 
 
 def preprocess_text(text):
@@ -42,38 +40,38 @@ def preprocess_text(text):
     text = text.replace(";", "")
     text = text.replace("@", "")
 
-    # replace emoji's with text decription
-    # emoji_dict = demoji.findall(text)
-    # if len(emoji_dict):
-    #     for emoji, emoji_text in emoji_dict.items():
-    #         text = text.replace(emoji, ' '+emoji_text+' ')
-    #         text = ' '.join(text.split())
-
     # remove emoji
     text = emoji.sub(r"", text)
 
     return text
 
 
-def process_csv(_type, _csv=True, names=None):
-    path = os.path.join(args.data, args.file + _type + ".tsv")
-    if _csv:
-        df = pd.read_csv(path, sep="\t", names=names)
-    else:
-        df = pd.read_excel(path.replace("tsv", "xlsx"), names=names)
-    df = df.dropna()
+def process_csv(_type, _csv="tsv", names=None):
+    path = os.path.join(args.data, args.file + _type + "." + _csv)
+
+    df = pd.read_csv(path, sep="\t", names=names)
+    df = df[~df["category"].isin(["not-Tamil", "not-malayalam"])]
+    # df = df.dropna()
 
     print(df.head())
-
+    
     df["cleaned_text"] = df["text"].map(lambda x: preprocess_text(x))
+    df["category"] = df["category"].map(
+        lambda x: "NOT" if (x == "Not_offensive") else "OFF"
+    )
+
     # df["cleaned_text"] = df["Tweets"].map(lambda x: preprocess_text(x))
     # df = df.rename(columns = {'Labels': 'category'}, inplace = False)
     # df = df.rename(columns = {'ID': 'id'}, inplace = False)
 
-    df.to_csv(path, sep="\t", index=False)
+    # df.to_csv(path.replace('Tamil/', ''), sep="\t", index=False)
+    df.to_csv(path.replace('Malayalam/', ''), sep="\t", index=False)
 
+
+# process_csv("train", "csv", ["text", "category", "category2"])
+# process_csv("dev", "csv", ["text", "category", "category2"])
 
 # process_csv("train")
-# process_csv("train", False, ["id", "text", "category"])
+# process_csv("train", "xlsx", ["id", "text", "category"])
 # process_csv("dev", ["id", "text", "category"])
 # process_csv("test")
