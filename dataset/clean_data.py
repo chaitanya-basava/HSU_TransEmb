@@ -44,7 +44,7 @@ def preprocess_text(text):
 
     # replace emoji's with text decription
     # emoji_dict = demoji.findall(text)
-    # if len(emoji_dict): 
+    # if len(emoji_dict):
     #     for emoji, emoji_text in emoji_dict.items():
     #         text = text.replace(emoji, ' '+emoji_text+' ')
     #         text = ' '.join(text.split())

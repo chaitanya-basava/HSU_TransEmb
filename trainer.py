@@ -6,10 +6,11 @@ from sklearn.metrics import f1_score
 
 import torch
 import torch.nn as nn
+from torch.optim import Adam
 from transformers import get_linear_schedule_with_warmup, AdamW
 
 from transformer.model import TransformerClassifier
-from utils.dataloader import get_dataloader_task1
+from utils.dataloader import get_dataloader_task1, get_dataloader_task2
 from utils.load_checkpoint import load_checkpoint
 
 
@@ -21,6 +22,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 model_dir = config["model"]["model_loc"]
+if not os.path.exists(model_dir):
+    os.makedirs(model_dir)
+
+model_dir = os.path.join(model_dir, config["dataset"]["file_name"])
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)
 
@@ -63,15 +68,21 @@ def configure_optimizers(model, dataloader):
     return optim, scheduler
 
 
-_model = TransformerClassifier(config["model"]["model"]).to(device)
-train_dataloader, val_dataloader, class_wt = get_dataloader_task1(
+_model = TransformerClassifier(
+    config["model"]["model"],
+    hidden_states=config["hyperparameters"]["hidden_layers"],
+    dropout=config["hyperparameters"]["dropout"],
+).to(device)
+train_dataloader, val_dataloader, class_wt = get_dataloader_task2(
     config["dataset"]["data_dir"],
     config["dataset"]["file_name"],
     config["model"]["model"],
     config["hyperparameters"]["batch_size"],
 )
 
-criterion = nn.CrossEntropyLoss(weight=class_wt.to(device))
+criterion = nn.CrossEntropyLoss(
+    weight=class_wt.to(device) if config["hyperparameters"]["use_weights"] else None
+)
 optimizer, scheduler = configure_optimizers(_model, train_dataloader)
 
 _model, optimizer, scheduler, best_weighted_f1, start_epoch = load_checkpoint(
@@ -123,7 +134,7 @@ for epoch in range(start_epoch, total_epochs):
                 details, ypred, ytrue = step(_model, batch, criterion)
 
                 y_preds = np.hstack((y_preds, ypred.cpu().numpy()))
-                y_test = np.hstack((y_test, ytrue.to('cpu').numpy()))
+                y_test = np.hstack((y_test, ytrue.to("cpu").numpy()))
 
                 val_loss.append(details["loss"].item())
                 val_acc.append(details["accuracy"].item())
@@ -131,8 +142,8 @@ for epoch in range(start_epoch, total_epochs):
                 vepoch.set_postfix(
                     loss=details["loss"].item(), acc=np.array(val_acc).mean()
                 )
-    
-    weighted_f1 = f1_score(y_test, y_preds, average='weighted')
+
+    weighted_f1 = f1_score(y_test, y_preds, average="weighted")
 
     # avg_val_acc = np.array(val_acc).mean()
     # if best_val_acc <= avg_val_acc:
@@ -162,11 +173,12 @@ for epoch in range(start_epoch, total_epochs):
         )
 
     print(
-        "Epoch {} - train loss: {}, train acc: {}, val loss: {}, val acc: {}".format(
+        "Epoch {:.3f} - train loss: {:.3f}, train acc: {:.3f}, val loss: {:.3f}, val acc: {:.3f}, wted-f1: {:.3f}".format(
             epoch,
             np.array(train_loss).mean(),
             np.array(train_acc).mean() * 100.0,
             np.array(val_loss).mean(),
             np.array(val_acc).mean() * 100.0,
+            weighted_f1 * 100.0,
         )
     )

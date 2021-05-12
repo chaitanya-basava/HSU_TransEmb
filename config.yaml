@@ -4,9 +4,11 @@ dataset:
 model:
   model_loc: /content/drive/MyDrive/HASOC/transformer
   model: bert-base-multilingual-cased #google/muril-base-cased #monsoon-nlp/tamillion #ai4bharat/indic-bert
-  ckpt: 
+  ckpt:
 hyperparameters:
   lr: 2e-5
   epochs: 10
   batch_size: 8
-  
+  use_weights: False
+  hidden_layers: 768
+  dropout: 0.5
