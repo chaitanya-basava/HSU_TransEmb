@@ -86,7 +86,7 @@ def get_dataloader_task2(
     # DATA proportion
     grp = train.groupby(["category"])["id"].nunique()
     train_prop = {key: grp[key] for key in list(grp.keys())}
-    class_wts = np.array([1.0 - train_prop[c] / len(train) for c in ["NOT", "OFF"]])
+    class_wts = np.array([1.0 - train_prop[c] / len(train) for c in list(grp.keys())])
 
     print(class_wts)
 

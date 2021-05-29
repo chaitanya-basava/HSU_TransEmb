@@ -12,3 +12,4 @@ hyperparameters:
   use_weights: False
   hidden_layers: 768
   dropout: 0.5
+  max_len: 180

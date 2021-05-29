@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 from transformers import AutoModel
 
@@ -14,7 +15,11 @@ class TransformerClassifier(nn.Module):
 
     def forward(self, input_ids, attention_mask):
         output = self.bert(input_ids=input_ids, attention_mask=attention_mask)
-        output = output.last_hidden_state[:, 0, :]
+        # output = output.last_hidden_state[:, 0, :]
+        output = output.last_hidden_state
+        output = torch.sum(output, dim=1) / torch.sum(attention_mask, axis=1).view(
+            output.shape[0], 1
+        )
         y = self.lin0(output)
         y = self.reLU(y)
         y = self.dropout(y)

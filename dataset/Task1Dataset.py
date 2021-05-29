@@ -30,7 +30,7 @@ class Task1Dataset(Dataset):
 
     def __getitem__(self, item):
         text = str(self.texts[item])
-        label = self.label_dict[self.labels[item]]
+        label = self.label_dict[self.labels[item].upper()]
 
         encoding = self.tokenizer.encode_plus(
             text,

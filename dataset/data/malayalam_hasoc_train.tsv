@@ -1,4 +1,4 @@
-id	Tweets	category	cleaned_text
+id	text	category	cleaned_text
 MA_YT001	Thaankal enthaan cheyyarullath?😛	NOT	thaankal enthaan cheyyarullath?
 MA_YT002	Ee theetam WCC feminichigalude news aarkk venam...kondupode...	OFF	ee theetam wcc feminichigalude news aarkk venam.kondupode.
 MA_YT003	fukru nem tiktok oolakale vilich charcha nadathiyenekka..bedham aanh	OFF	fukru nem tiktok oolakale vilich charcha nadathiyenekka.bedham aanh

@@ -73,11 +73,13 @@ _model = TransformerClassifier(
     hidden_states=config["hyperparameters"]["hidden_layers"],
     dropout=config["hyperparameters"]["dropout"],
 ).to(device)
+
 train_dataloader, val_dataloader, class_wt = get_dataloader_task2(
     config["dataset"]["data_dir"],
     config["dataset"]["file_name"],
     config["model"]["model"],
     config["hyperparameters"]["batch_size"],
+    max_len=config["hyperparameters"]["max_len"],
 )
 
 criterion = nn.CrossEntropyLoss(
