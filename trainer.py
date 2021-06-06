@@ -2,7 +2,7 @@ import os
 import yaml
 import numpy as np
 from tqdm import tqdm
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, classification_report
 
 import torch
 import torch.nn as nn
@@ -74,12 +74,12 @@ _model = TransformerClassifier(
     dropout=config["hyperparameters"]["dropout"],
 ).to(device)
 
-train_dataloader, val_dataloader, class_wt = get_dataloader_task2(
+train_dataloader, val_dataloader, class_wt = get_dataloader_task1(
     config["dataset"]["data_dir"],
     config["dataset"]["file_name"],
     config["model"]["model"],
     config["hyperparameters"]["batch_size"],
-    max_len=config["hyperparameters"]["max_len"],
+    config["hyperparameters"]["max_len"],
 )
 
 criterion = nn.CrossEntropyLoss(
@@ -184,3 +184,11 @@ for epoch in range(start_epoch, total_epochs):
             weighted_f1 * 100.0,
         )
     )
+    print(
+        classification_report(
+            y_test,
+            y_preds,
+            target_names=["OFF", "NOT"],
+        )
+    )
+    print("--" * 30)

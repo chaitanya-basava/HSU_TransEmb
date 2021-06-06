@@ -17,9 +17,7 @@ class TransformerClassifier(nn.Module):
         output = self.bert(input_ids=input_ids, attention_mask=attention_mask)
         # output = output.last_hidden_state[:, 0, :]
         output = output.last_hidden_state
-        output = torch.sum(output, dim=1) / torch.sum(attention_mask, axis=1).view(
-            output.shape[0], 1
-        )
+        output = torch.mean(output, dim=1)
         y = self.lin0(output)
         y = self.reLU(y)
         y = self.dropout(y)

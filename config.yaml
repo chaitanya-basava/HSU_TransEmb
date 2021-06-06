@@ -1,15 +1,15 @@
 dataset:
-  data_dir: ./dataset/data
+  data_dir: /content/HASOC-Dravidian/dataset/data
   file_name: tamil_offensive_
 model:
   model_loc: /content/drive/MyDrive/HASOC/transformer
-  model: bert-base-multilingual-cased #google/muril-base-cased #monsoon-nlp/tamillion #ai4bharat/indic-bert
+  model: xlm-roberta-base #distilbert-base-cased #google/muril-base-cased #monsoon-nlp/tamillion #ai4bharat/indic-bert
   ckpt:
 hyperparameters:
-  lr: 2e-5
-  epochs: 10
-  batch_size: 8
-  use_weights: False
+  lr: 1e-5
+  epochs: 30
+  batch_size: 32
+  use_weights: True
   hidden_layers: 768
   dropout: 0.5
-  max_len: 180
+  max_len: 256
