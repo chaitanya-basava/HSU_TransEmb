@@ -6,7 +6,6 @@ from sklearn.metrics import f1_score, classification_report
 
 import torch
 import torch.nn as nn
-from torch.optim import Adam
 from transformers import get_linear_schedule_with_warmup, AdamW
 
 from transformer.model import TransformerClassifier
