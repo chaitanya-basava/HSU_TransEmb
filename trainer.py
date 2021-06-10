@@ -6,12 +6,11 @@ from sklearn.metrics import f1_score, classification_report
 
 import torch
 import torch.nn as nn
-from transformers import get_linear_schedule_with_warmup, AdamW
 
+from iteration import step, configure_optimizers
+from utils.load_checkpoint import load_checkpoint
 from transformer.model import TransformerClassifier
 from utils.dataloader import get_dataloader_task1, get_dataloader_task2
-from utils.load_checkpoint import load_checkpoint
-
 
 with open("./config.yaml") as file:
     config = yaml.safe_load(file)
@@ -33,40 +32,6 @@ if not os.path.exists(model_dir):
     os.makedirs(model_dir)
 
 
-def step(model, batch, criterion):
-    targets = batch["label"].to(device)
-
-    outputs = model(
-        input_ids=batch["input_ids"].to(device),
-        attention_mask=batch["attention_mask"].to(device),
-    )
-
-    _, preds = torch.max(outputs, dim=1)
-
-    return (
-        {
-            "loss": criterion(outputs, targets),
-            "accuracy": (preds == targets).float().mean(),
-        },
-        preds,
-        targets,
-    )
-
-
-def configure_optimizers(model, dataloader):
-    optim = AdamW(
-        model.parameters(),
-        lr=float(config["hyperparameters"]["lr"]),
-        correct_bias=False,
-    )
-    scheduler = get_linear_schedule_with_warmup(
-        optim,
-        num_warmup_steps=0,
-        num_training_steps=len(dataloader) * config["hyperparameters"]["epochs"],
-    )
-    return optim, scheduler
-
-
 _model = TransformerClassifier(
     config["model"]["model"],
     hidden_states=config["hyperparameters"]["hidden_layers"],
@@ -84,7 +49,12 @@ train_dataloader, val_dataloader, class_wt = get_dataloader_task1(
 criterion = nn.CrossEntropyLoss(
     weight=class_wt.to(device) if config["hyperparameters"]["use_weights"] else None
 )
-optimizer, scheduler = configure_optimizers(_model, train_dataloader)
+optimizer, scheduler = configure_optimizers(
+    _model,
+    train_dataloader,
+    config["hyperparameters"]["lr"],
+    config["hyperparameters"]["epochs"],
+)
 
 _model, optimizer, scheduler, best_weighted_f1, start_epoch = load_checkpoint(
     config["model"]["ckpt"],
@@ -109,7 +79,7 @@ for epoch in range(start_epoch, total_epochs):
     ) as tepoch:
         tepoch.set_postfix(loss=0.0, acc=0.0)
         for batch_idx, batch in enumerate(tepoch):
-            details, _, _ = step(_model, batch, criterion)
+            details, _, _, _ = step(_model, batch, criterion, device)
 
             optimizer.zero_grad()
             details["loss"].backward()
@@ -132,7 +102,7 @@ for epoch in range(start_epoch, total_epochs):
         ) as vepoch:
             vepoch.set_postfix(loss=0.0, acc=0.0)
             for batch_idx, batch in enumerate(vepoch):
-                details, ypred, ytrue = step(_model, batch, criterion)
+                details, ypred, ytrue, _ = step(_model, batch, criterion, device)
 
                 y_preds = np.hstack((y_preds, ypred.cpu().numpy()))
                 y_test = np.hstack((y_test, ytrue.to("cpu").numpy()))

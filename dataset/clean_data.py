@@ -3,7 +3,7 @@ import re
 import argparse
 import pandas as pd
 
-from processing_util import emoticon_list, emoji
+from .processing_util import emoticon_list, emoji
 
 parser = argparse.ArgumentParser(description="")
 parser.add_argument(
@@ -46,7 +46,14 @@ def preprocess_text(text):
     return text
 
 
-def process_csv(_type, _csv="tsv", names=None):
+def process_data(df):
+    df["cleaned_text"] = df["text"].map(lambda x: preprocess_text(x))
+    df["category"] = df["category"].map(lambda x: x.upper())
+
+    return df
+
+
+def clean_csv(_type, _csv="tsv", names=None):
     path = os.path.join(args.data, args.file + _type + "." + _csv)
 
     df = pd.read_csv(path, sep="\t", names=names)
@@ -54,7 +61,7 @@ def process_csv(_type, _csv="tsv", names=None):
     # df = df.dropna()
 
     print(df.head())
-    
+
     df["cleaned_text"] = df["text"].map(lambda x: preprocess_text(x))
     df["category"] = df["category"].map(
         lambda x: "NOT" if (x == "Not_offensive") else "OFF"
@@ -65,7 +72,7 @@ def process_csv(_type, _csv="tsv", names=None):
     # df = df.rename(columns = {'ID': 'id'}, inplace = False)
 
     # df.to_csv(path.replace('Tamil/', ''), sep="\t", index=False)
-    df.to_csv(path.replace('Malayalam/', ''), sep="\t", index=False)
+    df.to_csv(path.replace("Malayalam/", ""), sep="\t", index=False)
 
 
 # process_csv("train", "csv", ["text", "category", "category2"])

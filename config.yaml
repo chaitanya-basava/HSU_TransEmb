@@ -1,5 +1,5 @@
 dataset:
-  data_dir: /content/HASOC-Dravidian/dataset/data
+  data_dir: ./dataset/data #/content/HASOC-Dravidian/dataset/data
   file_name: tamil_offensive_
 model:
   model_loc: /content/drive/MyDrive/HASOC/transformer
@@ -13,3 +13,6 @@ hyperparameters:
   hidden_layers: 768
   dropout: 0.5
   max_len: 256
+inference:
+  save_representations: True
+  mode: train

@@ -12,7 +12,9 @@ def load_checkpoint(
     scheduler=None,
 ):
     if ckpt:
-        checkpoint = torch.load(os.path.join(model_dir, ckpt), map_location=device)
+        checkpoint = torch.load(
+            os.path.join(model_dir, ckpt + ".pkl"), map_location=device
+        )
 
         _model.load_state_dict(checkpoint[model])
         best_weighted_f1 = checkpoint["weighted_f1"]

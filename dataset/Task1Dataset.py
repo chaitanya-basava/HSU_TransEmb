@@ -16,6 +16,8 @@ class Task1Dataset(Dataset):
         self.max_len = max_len
         self.tokenizer = tokenizer
         self.padding_type = padding_type
+
+        self.ids = df.id
         self.texts = df.cleaned_text.to_numpy()
         self.labels = df.category.to_numpy()
 
@@ -44,6 +46,7 @@ class Task1Dataset(Dataset):
         )
 
         return {
+            "id": self.ids[item],
             "text": text,
             "input_ids": encoding["input_ids"].flatten(),
             "attention_mask": encoding["attention_mask"].flatten(),
