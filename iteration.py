@@ -1,16 +1,24 @@
 import torch
+import torch.nn as nn
 from transformers import get_linear_schedule_with_warmup, AdamW
+
+_sofmax = nn.Softmax()
+
+
+def get_outputs(model, batch, device):
+    return model(
+        input_ids=batch["input_ids"].to(device),
+        attention_mask=batch["attention_mask"].to(device),
+    )
 
 
 def step(model, batch, criterion, device):
     targets = batch["label"].to(device)
 
-    outputs, representation = model(
-        input_ids=batch["input_ids"].to(device),
-        attention_mask=batch["attention_mask"].to(device),
-    )
+    outputs, representation = get_outputs(model, batch, device)
 
-    _, preds = torch.max(outputs, dim=1)
+    soft_outputs = _sofmax(outputs)
+    probabilities, preds = torch.max(soft_outputs, dim=1)
 
     return (
         {
@@ -19,6 +27,7 @@ def step(model, batch, criterion, device):
         },
         preds,
         targets,
+        probabilities,
         representation,
     )
 

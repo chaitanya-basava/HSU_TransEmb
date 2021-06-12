@@ -79,7 +79,7 @@ for epoch in range(start_epoch, total_epochs):
     ) as tepoch:
         tepoch.set_postfix(loss=0.0, acc=0.0)
         for batch_idx, batch in enumerate(tepoch):
-            details, _, _, _ = step(_model, batch, criterion, device)
+            details, _, _, _, _ = step(_model, batch, criterion, device)
 
             optimizer.zero_grad()
             details["loss"].backward()
@@ -102,7 +102,7 @@ for epoch in range(start_epoch, total_epochs):
         ) as vepoch:
             vepoch.set_postfix(loss=0.0, acc=0.0)
             for batch_idx, batch in enumerate(vepoch):
-                details, ypred, ytrue, _ = step(_model, batch, criterion, device)
+                details, ypred, ytrue, _, _ = step(_model, batch, criterion, device)
 
                 y_preds = np.hstack((y_preds, ypred.cpu().numpy()))
                 y_test = np.hstack((y_test, ytrue.to("cpu").numpy()))

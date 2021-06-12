@@ -2,8 +2,9 @@ import os
 import sys
 import yaml
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
-from sklearn.metrics import f1_score, classification_report
+from sklearn.metrics import classification_report
 
 import torch
 import torch.nn as nn
@@ -65,6 +66,7 @@ test_loader = get_testloader(
     config["hyperparameters"]["max_len"],
 )
 
+_ids, _probs, _labels = [], [], []
 test_loss, test_acc = [], []
 
 _model.eval()
@@ -73,18 +75,24 @@ with torch.set_grad_enabled(False):
     with tqdm(test_loader, desc="") as vepoch:
         vepoch.set_postfix(loss=0.0, acc=0.0)
         for batch_idx, batch in enumerate(vepoch):
-            details, ypred, ytrue, representations = step(
+            details, ypred, ytrue, probabilities, representations = step(
                 _model, batch, criterion, device
             )
+
+            ypred = ypred.cpu().numpy()
 
             if config["inference"]["save_representations"]:
                 ids = batch["id"]
                 representations = representations.cpu().numpy()
+                probabilities = probabilities.cpu().numpy()
 
-                for i, j in zip(ids, representations):
+                for i, j, k, l in zip(ids, representations, probabilities, ypred):
+                    _ids.append(i)
+                    _probs.append(k)
+                    _labels.append(l)
                     np.save(f"{rep_dir}/{i}.npy", j)
 
-            y_preds = np.hstack((y_preds, ypred.cpu().numpy()))
+            y_preds = np.hstack((y_preds, ypred))
             y_test = np.hstack((y_test, ytrue.to("cpu").numpy()))
 
             test_loss.append(details["loss"].item())
@@ -103,3 +111,7 @@ print(
 )
 
 print(f"{config['inference']['mode']} data processed")
+
+df = pd.DataFrame({"IDS": _ids, "probability": _probs, "label": _labels})
+df.to_csv(f"{model_dir}/_{config['inference']['mode']}.csv", index=False)
+print(f"Results stores in {model_dir}/_{config['inference']['mode']}.csv")
