@@ -1,6 +1,6 @@
 dataset:
   data_dir: ./dataset/data #/content/HASOC-Dravidian/dataset/data
-  file_name: tamil_offensive_
+  file_name: tamil_codemix_offensive_
 model:
   model_loc: /content/drive/MyDrive/HASOC/transformer
   model: distilbert-base-multilingual-cased #bert-base-multilingual-uncased #xlm-roberta-base #google/muril-base-cased #ai4bharat/indic-bert
@@ -16,3 +16,4 @@ hyperparameters:
 inference:
   save_representations: True
   mode: train
+  batch_size: 1

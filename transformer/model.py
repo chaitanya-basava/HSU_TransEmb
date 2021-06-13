@@ -18,6 +18,6 @@ class TransformerClassifier(nn.Module):
         output = output.last_hidden_state
         output = torch.mean(output, dim=1)
         y = self.lin0(output)
-        _y = self.reLU(y)
-        y = self.dropout(_y)
-        return self.lin1(y), _y
+        y = self.reLU(y)
+        y = self.dropout(y)
+        return self.lin1(y), output

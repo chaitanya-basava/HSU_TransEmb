@@ -62,7 +62,7 @@ test_loader = get_testloader(
     config["dataset"]["file_name"],
     config["model"]["model"],
     config["inference"]["mode"],
-    config["hyperparameters"]["batch_size"],
+    config["inference"]["batch_size"],
     config["hyperparameters"]["max_len"],
 )
 
