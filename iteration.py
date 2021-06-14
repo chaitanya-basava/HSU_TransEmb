@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from transformers import get_linear_schedule_with_warmup, AdamW
 
-_sofmax = nn.Softmax()
+_sofmax = nn.Softmax(dim=1)
 
 
 def get_outputs(model, batch, device):
