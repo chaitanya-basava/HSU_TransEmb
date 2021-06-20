@@ -46,8 +46,6 @@ _model, _, _, best_weighted_f1, _ = load_checkpoint(
     None,
 )
 
-criterion = nn.CrossEntropyLoss()
-
 print(f"Model with wted F1 = {best_weighted_f1} is loaded!!!")
 
 test_loader = get_testloader(
@@ -64,11 +62,8 @@ y_preds = np.array([])
 probs = np.array([])
 with torch.set_grad_enabled(False):
     with tqdm(test_loader, desc="") as vepoch:
-        
         for batch_idx, batch in enumerate(vepoch):
-            ypred, probabilities = step(
-                _model, batch, criterion, device, True
-            )
+            ypred, probabilities = step(_model, batch, None, device, True)
 
             ypred = ypred.cpu().numpy()
             probabilities = probabilities.cpu().numpy()
@@ -76,17 +71,16 @@ with torch.set_grad_enabled(False):
             probs = np.hstack((probs, probabilities))
 
 
-
 test_path = os.path.join(config["dataset"]["data_dir"], config["dataset"]["file_name"])
 test = pd.read_csv(test_path, sep="\t", header=None)
-if(test.loc[0][0] == 'Id' or test.loc[0][0] == 'ID' ):
+if test.loc[0][0] == "Id" or test.loc[0][0] == "ID":
     test = test.drop([0])
 test = test.reset_index(drop=True)
-test.columns = ['id', 'text']
-#test['label'] = np.where(y_preds==0, 'Not', 'Off').astype(str)
-test['label'] = y_preds
-test['prob'] = probs
+test.columns = ["id", "text"]
+# test['label'] = np.where(y_preds==0, 'Not', 'Off').astype(str)
+test["label"] = y_preds
+test["probability"] = probs
 
 
-test.to_csv(f"{model_dir}/_test.tsv", sep = '\t', index=False)
+test.to_csv(f"{model_dir}/_test.tsv", sep="\t", index=False)
 print(f"Results stores in {model_dir}/_test.tsv")
