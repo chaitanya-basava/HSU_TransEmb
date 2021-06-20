@@ -125,6 +125,7 @@ def get_dataloader_task2(
         torch.tensor(class_wts, dtype=torch.float),
     )
 
+
 def get_testloader(
     data_path,
     file_name,
@@ -135,12 +136,12 @@ def get_testloader(
 ):
     tokenizer = AutoTokenizer.from_pretrained(model)
 
-    test_path = os.path.join(data_path, file_name)
+    test_path = os.path.join(data_path, file_name + "test.tsv")
     test = pd.read_csv(test_path, sep="\t", header=None)
-    if(test.loc[0][0] == 'Id' or test.loc[0][0] == 'ID' ):
+    if test.loc[0][0] == "Id" or test.loc[0][0] == "ID":
         test = test.drop([0])
     test = test.reset_index(drop=True)
-    test.columns = ['id', 'text']
+    test.columns = ["id", "text"]
 
     print("Processing Data")
     test["cleaned_text"] = test["text"].map(lambda x: preprocess_text(x))
@@ -153,11 +154,8 @@ def get_testloader(
         padding_type=padding_type,
     )
 
-
-    return (
-        DataLoader(
-            dataset=test_dataset,
-            batch_size=batch_size,
-            shuffle=True,
-        ),
+    return DataLoader(
+        dataset=test_dataset,
+        batch_size=batch_size,
+        shuffle=False,
     )

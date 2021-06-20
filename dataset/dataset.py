@@ -53,6 +53,7 @@ class TaskDataset(Dataset):
             "label": torch.tensor(label, dtype=torch.long),
         }
 
+
 class TestDataset(Dataset):
     def __init__(
         self,
@@ -68,7 +69,6 @@ class TestDataset(Dataset):
 
         self.ids = df.id
         self.texts = df.cleaned_text.to_numpy()
-
 
     def __len__(self):
         return len(self.texts)

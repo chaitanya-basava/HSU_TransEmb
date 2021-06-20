@@ -82,5 +82,5 @@ test["label"] = y_preds
 test["probability"] = probs
 
 
-test.to_csv(f"{model_dir}/_test.tsv", sep="\t", index=False)
+test.to_csv(f"{model_dir}/_test.csv", sep="\t", index=False)
 print(f"Results stores in {model_dir}/_test.tsv")

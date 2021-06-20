@@ -42,4 +42,8 @@ for id, stats in notoff_probs.items():
     _probs.append(prob if label == 0 else 1 - prob)
 
 df = pd.DataFrame({"id": _ids, "text": _text, "pred": _labels})
-df.to_csv(f"{model_dir}/softensemble_{_mode}.csv", index=False)
+df.to_csv(
+    f"{model_dir}/{config['dataset']['file_name']}_{_mode}_preds.tsv",
+    sep="\t",
+    index=False,
+)
