@@ -12,15 +12,22 @@ def get_outputs(model, batch, device):
     )
 
 
-def step(model, batch, criterion, device):
-    targets = batch["label"].to(device)
+def step(model, batch, criterion, device, test_mode = False):
+    
 
     outputs, representation = get_outputs(model, batch, device)
 
     soft_outputs = _sofmax(outputs)
     probabilities, preds = torch.max(soft_outputs, dim=1)
 
-    return (
+    if(test_mode):
+        return (
+        preds,
+        probabilities,
+    )
+    else:
+        targets = batch["label"].to(device)
+        return (
         {
             "loss": criterion(outputs, targets),
             "accuracy": (preds == targets).float().mean(),

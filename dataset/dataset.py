@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import Dataset
 
 
-class Task1Dataset(Dataset):
+class TaskDataset(Dataset):
     def __init__(
         self,
         df,
@@ -51,4 +51,45 @@ class Task1Dataset(Dataset):
             "input_ids": encoding["input_ids"].flatten(),
             "attention_mask": encoding["attention_mask"].flatten(),
             "label": torch.tensor(label, dtype=torch.long),
+        }
+
+class TestDataset(Dataset):
+    def __init__(
+        self,
+        df,
+        tokenizer,
+        max_len=512,
+        padding_type="max_length",
+    ):
+
+        self.max_len = max_len
+        self.tokenizer = tokenizer
+        self.padding_type = padding_type
+
+        self.ids = df.id
+        self.texts = df.cleaned_text.to_numpy()
+
+
+    def __len__(self):
+        return len(self.texts)
+
+    def __getitem__(self, item):
+        text = str(self.texts[item])
+
+        encoding = self.tokenizer.encode_plus(
+            text,
+            add_special_tokens=True,
+            max_length=self.max_len,
+            return_token_type_ids=False,
+            padding=self.padding_type,
+            return_attention_mask=True,
+            return_tensors="pt",  # to get a torch.Tensor
+            truncation=True,
+        )
+
+        return {
+            "id": self.ids[item],
+            "text": text,
+            "input_ids": encoding["input_ids"].flatten(),
+            "attention_mask": encoding["attention_mask"].flatten(),
         }
