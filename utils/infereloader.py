@@ -5,7 +5,7 @@ import pandas as pd
 from transformers import AutoTokenizer
 from torch.utils.data import DataLoader
 
-from dataset.Task1Dataset import Task1Dataset
+from dataset.dataset import TaskDataset
 from dataset.clean_data import process_data
 
 
@@ -29,7 +29,7 @@ def get_testloader(
     df = process_data(df)
     print("Done Processing")
 
-    dataset = Task1Dataset(
+    dataset = TaskDataset(
         df,
         tokenizer=tokenizer,
         max_len=max_length,

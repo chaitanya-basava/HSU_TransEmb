@@ -7,7 +7,8 @@ import torch
 from transformers import AutoTokenizer
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
-from dataset.Task1Dataset import Task1Dataset
+from dataset.dataset import TaskDataset, TestDataset
+from dataset.clean_data import preprocess_text
 
 
 def get_dataloader_task1(
@@ -40,14 +41,14 @@ def get_dataloader_task1(
     # example_wts = [1./class_wts[c] for c in train.category]
     # sampler = WeightedRandomSampler(example_wts, len(train))
 
-    train_dataset = Task1Dataset(
+    train_dataset = TaskDataset(
         train,
         tokenizer=tokenizer,
         max_len=max_length,
         padding_type=padding_type,
     )
 
-    val_dataset = Task1Dataset(
+    val_dataset = TaskDataset(
         val,
         tokenizer=tokenizer,
         max_len=max_length,
@@ -96,14 +97,14 @@ def get_dataloader_task2(
     # example_wts = [1./class_wts[c] for c in train.category]
     # sampler = WeightedRandomSampler(example_wts, len(train))
 
-    train_dataset = Task1Dataset(
+    train_dataset = TaskDataset(
         train,
         tokenizer=tokenizer,
         max_len=max_length,
         padding_type=padding_type,
     )
 
-    val_dataset = Task1Dataset(
+    val_dataset = TaskDataset(
         val,
         tokenizer=tokenizer,
         max_len=max_length,
@@ -122,4 +123,41 @@ def get_dataloader_task2(
             shuffle=False,
         ),
         torch.tensor(class_wts, dtype=torch.float),
+    )
+
+def get_testloader(
+    data_path,
+    file_name,
+    model,
+    batch_size=64,
+    max_length=256,
+    padding_type="max_length",
+):
+    tokenizer = AutoTokenizer.from_pretrained(model)
+
+    test_path = os.path.join(data_path, file_name)
+    test = pd.read_csv(test_path, sep="\t", header=None)
+    if(test.loc[0][0] == 'Id' or test.loc[0][0] == 'ID' ):
+        test = test.drop([0])
+    test = test.reset_index(drop=True)
+    test.columns = ['id', 'text']
+
+    print("Processing Data")
+    test["cleaned_text"] = test["text"].map(lambda x: preprocess_text(x))
+    print("Done Processing")
+
+    test_dataset = TestDataset(
+        test,
+        tokenizer=tokenizer,
+        max_len=max_length,
+        padding_type=padding_type,
+    )
+
+
+    return (
+        DataLoader(
+            dataset=test_dataset,
+            batch_size=batch_size,
+            shuffle=True,
+        ),
     )
