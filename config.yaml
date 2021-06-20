@@ -3,7 +3,7 @@ dataset:
   file_name: tamil_codemix_offensive_
 model:
   model_loc: /content/drive/MyDrive/HASOC/transformer
-  model: distilbert-base-multilingual-cased #bert-base-multilingual-uncased #xlm-roberta-base #google/muril-base-cased #ai4bharat/indic-bert
+  model: distilbert-base-multilingual-cased #bert-base-multilingual-uncased #google/muril-base-cased
   ckpt:
 hyperparameters:
   lr: 1e-5
@@ -14,6 +14,11 @@ hyperparameters:
   dropout: 0.5
   max_len: 256
 inference:
-  save_representations: True
   mode: train
   batch_size: 1
+ensemble:
+  mode: dev
+  models:
+  - muril-base-cased
+  - bert-base-multilingual-uncased
+  - distilbert-base-multilingual-cased

@@ -30,11 +30,6 @@ model_dir = os.path.join(
     config["model"]["model"].split("/")[-1],
 )
 
-if config["inference"]["save_representations"]:
-    rep_dir = os.path.join(model_dir, "representations")
-    if not os.path.exists(rep_dir):
-        os.makedirs(rep_dir)
-
 _model = TransformerClassifier(
     config["model"]["model"],
     hidden_states=config["hyperparameters"]["hidden_layers"],
@@ -66,7 +61,7 @@ test_loader = get_testloader(
     config["hyperparameters"]["max_len"],
 )
 
-_ids, _probs, _labels = [], [], []
+_ids, _probs, _labels, _true = [], [], [], []
 test_loss, test_acc = [], []
 
 _model.eval()
@@ -75,25 +70,23 @@ with torch.set_grad_enabled(False):
     with tqdm(test_loader, desc="") as vepoch:
         vepoch.set_postfix(loss=0.0, acc=0.0)
         for batch_idx, batch in enumerate(vepoch):
-            details, ypred, ytrue, probabilities, representations = step(
+            details, ypred, ytrue, probabilities, _ = step(
                 _model, batch, criterion, device
             )
 
+            ytrue = ytrue.cpu().numpy()
             ypred = ypred.cpu().numpy()
 
-            if config["inference"]["save_representations"]:
-                ids = batch["id"]
-                representations = representations.cpu().numpy()
-                probabilities = probabilities.cpu().numpy()
-
-                for i, j, k, l in zip(ids, representations, probabilities, ypred):
-                    _ids.append(i)
-                    _probs.append(k)
-                    _labels.append(l)
-                    np.save(f"{rep_dir}/{i}.npy", j)
+            for i, j, k, l in zip(
+                batch["id"], probabilities.cpu().numpy(), ypred, ytrue
+            ):
+                _ids.append(i)
+                _probs.append(j)
+                _labels.append(k)
+                _true.append(l)
 
             y_preds = np.hstack((y_preds, ypred))
-            y_test = np.hstack((y_test, ytrue.to("cpu").numpy()))
+            y_test = np.hstack((y_test, ytrue))
 
             test_loss.append(details["loss"].item())
             test_acc.append(details["accuracy"].item())
@@ -112,6 +105,6 @@ print(
 
 print(f"{config['inference']['mode']} data processed")
 
-df = pd.DataFrame({"IDS": _ids, "probability": _probs, "label": _labels})
+df = pd.DataFrame({"ids": _ids, "probability": _probs, "pred": _labels, "true": _true})
 df.to_csv(f"{model_dir}/_{config['inference']['mode']}.csv", index=False)
 print(f"Results stores in {model_dir}/_{config['inference']['mode']}.csv")
